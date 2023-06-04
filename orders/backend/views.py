@@ -96,6 +96,11 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, ordered_items=[])
+        user = serializer.context['request'].user
+        send_mail(subject='Произошло обновление заказа',
+                  message='Ваш заказ был создан.',
+                  from_email=orders.settings.EMAIL_HOST_USER,
+                  recipient_list=[user])
 
 
 class OrderItemViewSet(viewsets.ModelViewSet):
@@ -109,7 +114,7 @@ class OrderItemViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             order = serializer.data['order']
-            user = serializer.context['request'].user
+            user = self.request.user
             send_mail(subject='Произошло обновление заказа',
                       message=f'Ваш заказ {order} был изменен.',
                       from_email=orders.settings.EMAIL_HOST_USER,
@@ -124,7 +129,7 @@ class OrderItemViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         order = serializer.data['order']
-        user = serializer.context['request'].user
+        user = self.request.user
         send_mail(subject='Произошло обновление заказа',
                   message=f'Ваш заказ {order} был изменен.',
                   from_email=orders.settings.EMAIL_HOST_USER,
@@ -135,9 +140,9 @@ class OrderItemViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         order = serializer.data['order']
-        user = serializer.context['request'].user
+        user = self.request.user
         send_mail(subject='Произошло обновление заказа',
-                  message=f'Ваш {order} заказ был изменен.',
+                  message=f'Ваш {order} заказ был удален.',
                   from_email=orders.settings.EMAIL_HOST_USER,
                   recipient_list=[user])
         self.perform_destroy(instance)

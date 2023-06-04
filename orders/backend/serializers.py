@@ -131,3 +131,4 @@ class OrderSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Order
         fields = ['url', 'id', 'user', 'ordered_items', 'status']
+        read_only_fields = ['user']
