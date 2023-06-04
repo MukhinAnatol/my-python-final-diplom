@@ -10,7 +10,8 @@ from yaml import load as load_yaml, Loader
 
 from backend.models import Shop, Category, Product, ProductInfo, ProductParameter, Parameter, Order, OrderItem, CustomUser
 from backend.serializers import ProductInfoSerializer, OrderSerializer, OrderItemSerializer, CustomUserSerializer
-from backend.email import send_email
+from django.core.mail import send_mail
+import orders.settings
 
 
 class RegisterUserView(generics.CreateAPIView):
@@ -107,6 +108,12 @@ class OrderItemViewSet(viewsets.ModelViewSet):
                                          context={'request': request})
         if serializer.is_valid():
             serializer.save()
+            order = serializer.data['order']
+            user = serializer.context['request'].user
+            send_mail(subject='Произошло обновление заказа',
+                      message=f'Ваш заказ {order} был изменен.',
+                      from_email=orders.settings.EMAIL_HOST_USER,
+                      recipient_list=[user])
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -116,16 +123,22 @@ class OrderItemViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        #order = serializer.data['order']
-        #user = serializer.context['request'].user
-        #send_email(order=order, user=user)
+        order = serializer.data['order']
+        user = serializer.context['request'].user
+        send_mail(subject='Произошло обновление заказа',
+                  message=f'Ваш заказ {order} был изменен.',
+                  from_email=orders.settings.EMAIL_HOST_USER,
+                  recipient_list=[user])
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-        #order = serializer.data['order']
-        #user = serializer.context['request'].user
-        #send_email(order=order, user=user)
+        order = serializer.data['order']
+        user = serializer.context['request'].user
+        send_mail(subject='Произошло обновление заказа',
+                  message=f'Ваш {order} заказ был изменен.',
+                  from_email=orders.settings.EMAIL_HOST_USER,
+                  recipient_list=[user])
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
